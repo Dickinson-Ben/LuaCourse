@@ -13,47 +13,55 @@ player.moveSpeed = 180
 zombies = {}
 bullets = {}
 
+gameState = 1
 
 
-
+score = 0
+highScore = 0
+timer = 2
+maxTimer = 2
+gameTimer = 0
 
 movingUp = false
 movingDown = false
 movingLeft = false
 movingRight = false
-
-
-
 end
 
 function love.update(dt)
 
-  --upward movement
-  if love.keyboard.isDown("w") then
-  player.y = player.y - player.moveSpeed * dt
-  end
-  --downward movement
-  if love.keyboard.isDown("s") then
-  player.y = player.y + player.moveSpeed * dt
+  if gameState == 2 then
+    --upward movement
+    if love.keyboard.isDown("w") then
+    player.y = player.y - player.moveSpeed * dt
     end
-    --left movement
-    if love.keyboard.isDown("a") then
-    player.x = player.x - player.moveSpeed * dt
-  end
-  --Right movement
-  if love.keyboard.isDown("d") then
-  player.x = player.x + player.moveSpeed * dt
-  end
+    --downward movement
+    if love.keyboard.isDown("s") then
+    player.y = player.y + player.moveSpeed * dt
+      end
+      --left movement
+      if love.keyboard.isDown("a") then
+      player.x = player.x - player.moveSpeed * dt
+    end
+    --Right movement
+    if love.keyboard.isDown("d") then
+    player.x = player.x + player.moveSpeed * dt
+    end
 
+  end
 --zombie movement
+
 
   for i, z in ipairs(zombies) do
     z.x = z.x  + math.cos(zombie_face_player(z)) * z.speed * dt
     z.y = z.y + math.sin(zombie_face_player(z)) * z.speed * dt
 
-    if distanceBetween(z.x, z.y, player.x, player.y) < 100 then
+
+--odd problem, the player position returns nil if the player hasn't moved. Odd
+    if distanceBetween(z.x, z.y, player.x, player.y) < 10 then
       for i, z in ipairs(zombies) do
         zombies[i] = nil --zombies[i] refers to the current index in the zombies table
+        gameState = 1
       end
     end
   end
@@ -78,6 +86,7 @@ for i, z in ipairs(zombies) do
     if distanceBetween(z.x, z.y, b.x, b.y) < 40 then
       z.dead = true
       b.dead = true
+      score = score + 1
     end
   end
 end
@@ -101,10 +110,20 @@ for i=#bullets, 1, -1 do
     b.x = b.x + math.cos(b.direction) * b.speed * dt
     b.y = b.y + math.sin(b.direction) * b.speed * dt
   end
+
+  if gameState == 2 then
+      timer = timer - dt
+      if timer <= 0 then
+        spawnZombie()
+        maxTimer = maxTimer * 0.95
+        timer = maxTimer
+      end
+  end
+
+  if gameState == 2 then
+    gameTimer = gameTimer + dt
+  end
 end
-
-
-
 
 
 
@@ -112,12 +131,22 @@ end
 function love.draw()
   love.graphics.draw(sprites.bg, 0, 0) --background image.
   love.graphics.draw(sprites.player, player.x, player.y, player_face_mouse(), nil, nil, sprites.player:getWidth()/2, sprites.player:getHeight()/2 ) -- draws the player character sprite and positions it in the centre o
--- to do: Adjust the origin offset
 
+  if gameState == 1 then
+    love.graphics.setFont(love.graphics.newFont(50)) --actually takes a font file name parameter but not needed when used like this
+    love.graphics.printf("Press S to start!", 0, 50, love.graphics.getWidth(), "center")
+  end
+
+
+  if gameState  == 2 then
+    love.graphics.setFont(love.graphics.newFont(20))
+    love.graphics.printf("Score: " .. score, 0, 0, love.graphics.getWidth(), "center")
+    love.graphics.printf("Timer: " .. math.ceil(gameTimer),0, 0, love.graphics.getWidth(), "left")
+    love.graphics.printf("High Score: " .. highScore, 0, 0, love.graphics.getWidth(), "right")
+  end
 
   for i,z in ipairs(zombies) do
     love.graphics.draw(sprites.zombie, z.x, z.y, zombie_face_player(z), nil, nil, sprites.zombie:getWidth()/2, sprites.player:getHeight()/2)
-
   end
 
 
@@ -128,7 +157,9 @@ function love.draw()
 end
 
 function player_face_mouse()
+  if gameState == 2 then
   return math.atan2(player.y - love.mouse.getY(), player.x - love.mouse.getX()) + math.pi
+end
   -- returns angles and radians for the points provided. Used to rotate one object to face another here i.e. rotates the player
   --sprite to face the mouse! (remembe this it's super important for many aspects of game development!)
 end
@@ -173,30 +204,37 @@ function spawnZombie()
 end
 
 function spawnBullet()
-  bullet = {}
-  bullet.x = player.x
-  bullet.y = player.y
-  bullet.speed = 140
-  bullet.direction = player_face_mouse() --call teh player_face_mouse function to give the bullet it's directional radian value!
-  bullet.dead = false
-  table.insert(bullets, bullet)
-end
+    bullet = {}
+    bullet.x = player.x
+    bullet.y = player.y
+    bullet.speed = 140
+    bullet.direction = player_face_mouse() --call teh player_face_mouse function to give the bullet it's directional radian value!
+    bullet.dead = false
+    table.insert(bullets, bullet)
+  end
 
+--manual spawning for debugging zombie spawn, uncomment if needed
+--function love.keypressed(key, scancode, isrepeat)
+--  if key == "space" then
+--    spawnZombie()
+--  end
+--end
 
 function love.keypressed(key, scancode, isrepeat)
-  if key == "space" then
-    spawnZombie()
+  if key == "s" then
+    gameState = 2
   end
+end
 
 function love.mousepressed(x, y, b, isTouch)
   if b == 1 then
-    spawnBullet()
+      if gameState == 2 then
+        spawnBullet()
+      end
   end
-  -- body...
 end
+
 
 function distanceBetween(x1, y1, x2, y2)
   return math.sqrt((y2 - y1)^2 ^ (x2 - x1) ^2)
-end
-
 end
