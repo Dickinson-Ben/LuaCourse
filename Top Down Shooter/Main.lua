@@ -72,13 +72,38 @@ for i=#bullets,1, -1 do
     end
 end
 
+--bullet collision with zombies. Despawn particular zombie on hit
+for i, z in ipairs(zombies) do
+  for j, b in ipairs(bullets) do
+    if distanceBetween(z.x, z.y, b.x, b.y) < 40 then
+      z.dead = true
+      b.dead = true
+    end
+  end
+end
 
+for i=#zombies, 1, -1 do
+  local z = zombies[i]
+    if z.dead == true then
+      table.remove(zombies, i)
+    end
+  end
+
+
+for i=#bullets, 1, -1 do
+  local b = bullets[i]
+    if b.dead == true then
+      table.remove(bullets, i)
+    end
+  end
   --bullet movement
   for i, b in ipairs(bullets) do
     b.x = b.x + math.cos(b.direction) * b.speed * dt
     b.y = b.y + math.sin(b.direction) * b.speed * dt
   end
 end
+
+
 
 
 
@@ -116,12 +141,34 @@ end
 
 function spawnZombie()
   zombie = {}
-  zombie.x = math.random(0, love.graphics.getHeight()) --sets the zombies initial spawn to be random but within the limits of the screen
-  zombie.y  = math.random(0, love.graphics.getWidth()) -- can still spawn slightly off screen due to image origin point but that is desired to give the feeling
-                                                    -- that they are coming ffrom somewhere? Perhaps tweek so they all come off screen.
+  zombie.x = 0 --sets the zombies initial spawn to be random but within the limits of the screen
+  zombie.y  = 0 -- can still spawn slightly off screen due to image origin point but that is desired to give the feeling
+
+  edge = math.random(1, 4)
+
+  if edge == 1 then
+    zombie.x = math.random(0,love.graphics.getWidth())
+    zombie.y = 0
+  end
+
+  if edge == 2 then
+    zombie.x = 0
+    zombie.y = math.random(0, love.graphics.getHeight())
+  end
+
+  if edge == 3 then
+      zombie.x = love.graphics.getWidth()
+      zombie.y = math.random(0, love.graphics.getHeight())
+  end
+
+  if edge == 4 then
+    zombie.x = math.random(0, love.graphics.getWidth())
+    zombie.y = love.graphics.getHeight()
+  end
+
   zombie.health = 10
   zombie.speed = 100
-
+  zombie.dead = false
   table.insert(zombies, zombie)
 end
 
@@ -131,7 +178,7 @@ function spawnBullet()
   bullet.y = player.y
   bullet.speed = 140
   bullet.direction = player_face_mouse() --call teh player_face_mouse function to give the bullet it's directional radian value!
-
+  bullet.dead = false
   table.insert(bullets, bullet)
 end
 
