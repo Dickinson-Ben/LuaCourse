@@ -34,4 +34,46 @@ function table.show(t, name, indent)
          return string.format("%q", so)
       end
    end
+
+   local function addtocart (value, name, indent, saved, field)
+      indent = indent or ""
+      saved = saved or {}
+      field = field or name
+
+      cart = cart .. indent .. field
+
+      if type(value) ~= "table" then
+         cart = cart .. " = " .. basicSerialize(value) .. ";\n"
+      else
+         if saved[value] then
+            cart = cart .. " = {}; -- " .. saved[value]
+                        .. " (self reference)\n"
+            autoref = autoref ..  name .. " = " .. saved[value] .. ";\n"
+         else
+            saved[value] = name
+            --if tablecount(value) == 0 then
+            if isemptytable(value) then
+               cart = cart .. " = {};\n"
+            else
+               cart = cart .. " = {\n"
+               for k, v in pairs(value) do
+                  k = basicSerialize(k)
+                  local fname = string.format("%s[%s]", name, k)
+                  field = string.format("[%s]", k)
+                  -- three spaces between levels
+                  addtocart(v, fname, indent .. "   ", saved, field)
+               end
+               cart = cart .. indent .. "};\n"
+            end
+         end
+      end
+   end
+
+   name = name or "__unnamed__"
+   if type(t) ~= "table" then
+      return name .. " = " .. basicSerialize(t)
+   end
+   cart, autoref = "", ""
+   addtocart(t, name, indent)
+   return cart .. autoref
 end
