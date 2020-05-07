@@ -1,3 +1,9 @@
+--to do:
+--Add sound for jump, coin collection, bg music, lava touching hiss
+--implement lives function
+--implement game timer because it's good practice 
+
+
 function love.load()
   love.window.setMode(900, 700)
   gameWorld = love.physics.newWorld(0, 500, false ) -- the sleep property (last one) means an object that stops moving no longer has physics applied to it
@@ -10,18 +16,25 @@ function love.load()
 
   require('player') --requirements just need the file name not the extension.
   require('coin')
+  cameraFile = require('hump-master/camera')
   anim8 = require('anim8-master/anim8')
   sti = require("Simple-Tiled-Implementation-master/sti")
 
+cam = cameraFile()
+
   platforms = {}
-  spawnCoin(200, 100)
 
   score = 0
   highScore = 0
   lives = 3
-
+--spawn coins using the attributes defined in coin.lua and the positions from the
+--tile map
   gameMap = sti("maps/gameMap.lua")
-
+  for i, obj in pairs(gameMap.layers["coinsLayer"].objects) do
+    spawnCoin(obj.x, obj.y)
+  end
+  --spawn in the platforms using the pre-defined physical properties from the
+  --table, and the positions from the tile map!
     for i, obj in pairs(gameMap.layers["platformLayer"].objects) do
       spawnPlatform(obj.x, obj.y, obj.width, obj.height)
     end
@@ -34,12 +47,16 @@ function love.update(dt)
   gameMap:update(dt)
   coinUpdate(dt)
 
+  cam:lookAt(player.body:getX(), player.body:getY())
+
   for i, c in ipairs(coins) do
     c.animation:update(dt)
   end
 end
 
 function love.draw()
+  cam:attach() --calling this function draws everything below (in the draw function) relevant to the cameras position
+  --draws the visuals for all the platforms and anythin else on that layer!
   gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
   love.graphics.draw(player.sprite, player.body:getX(), player.body:getY(), nil ,  player.direction, 1 , sprites.player_stand:getWidth()/2, sprites.player_stand:getHeight()/2)
   --utilising player.direction within the scaling factor is a trick to change the directional facing of the sprite. Since a necative
@@ -47,14 +64,17 @@ function love.draw()
   for i, c in ipairs(coins) do
     c.animation:draw(sprites.coinSheet, c.x, c.y, nil, nil, nil, 20.5, 21)
   end
-  --basic UI Elements for tracking player stats
-  love.graphics.setFont(love.graphics.newFont(25))
-  love.graphics.printf("Coins Collected: " .. score, 0, 0, love.graphics.getWidth(), "center")
+  --detatches the camera
+    cam:detach()
+--basic UI Elements for tracking player stats
+    love.graphics.setFont(love.graphics.newFont(25))
+    love.graphics.printf("Coins Collected: " .. score, 0, 0, love.graphics.getWidth(), "center")
+
 end
 
 function love.keypressed(key, scancode, isrepeat)
   if key == "space" and player.isJumping == false then
-    player.body:applyLinearImpulse(0, -2500) --takes x and y values
+    player.body:applyLinearImpulse(0, -3200) --takes x and y values
     player.isJumping = true
 
   end
