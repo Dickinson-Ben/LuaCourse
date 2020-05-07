@@ -1,5 +1,5 @@
 function love.load()
-love.window.setMode(900, 700)
+  love.window.setMode(900, 700)
   gameWorld = love.physics.newWorld(0, 500, false ) -- the sleep property (last one) means an object that stops moving no longer has physics applied to it
   gameWorld:setCallbacks(beingContact, endContact, preSolve, postSolve)
   sprites = {}
@@ -11,17 +11,28 @@ love.window.setMode(900, 700)
   require('player') --requirements just need the file name not the extension.
   require('coin')
   anim8 = require('anim8-master/anim8')
+  sti = require("Simple-Tiled-Implementation-master/sti")
 
+  platforms = {}
+  spawnCoin(200, 100)
 
-platforms = {}
-spawnPlatform(100, 400, 500, 40)
-spawnCoin(200, 100)
+  score = 0
+  highScore = 0
+  lives = 3
+
+  gameMap = sti("maps/gameMap.lua")
+
+    for i, obj in pairs(gameMap.layers["platformLayer"].objects) do
+      spawnPlatform(obj.x, obj.y, obj.width, obj.height)
+    end
 
 end
 
 function love.update(dt)
   gameWorld:update(dt) --needed to update the world physics interactions. Without it, nothing will move as it should under the effects of physics
   playerUpdate(dt)
+  gameMap:update(dt)
+  coinUpdate(dt)
 
   for i, c in ipairs(coins) do
     c.animation:update(dt)
@@ -29,18 +40,18 @@ function love.update(dt)
 end
 
 function love.draw()
+  gameMap:drawLayer(gameMap.layers["Tile Layer 1"])
   love.graphics.draw(player.sprite, player.body:getX(), player.body:getY(), nil ,  player.direction, 1 , sprites.player_stand:getWidth()/2, sprites.player_stand:getHeight()/2)
---utilising player.direction within the scaling factor is a trick to change the directional facing of the sprite. Since a necative
---horozontal scaling results in the image being scaled to the point of rotation!
-for i, c in ipairs(coins) do
-  c.animation:draw(sprites.coinSheet, c.x, c.y)
-end
-
-
-  for i, p in ipairs(platforms) do
-    love.graphics.rectangle("fill", p.body:getX(), p.body:getY() , p.width, p.height)
+  --utilising player.direction within the scaling factor is a trick to change the directional facing of the sprite. Since a necative
+  --horozontal scaling results in the image being scaled to the point of rotation!
+  for i, c in ipairs(coins) do
+    c.animation:draw(sprites.coinSheet, c.x, c.y, nil, nil, nil, 20.5, 21)
   end
+  --basic UI Elements for tracking player stats
+  love.graphics.setFont(love.graphics.newFont(25))
+  love.graphics.printf("Coins Collected: " .. score, 0, 0, love.graphics.getWidth(), "center")
 end
+
 function love.keypressed(key, scancode, isrepeat)
   if key == "space" and player.isJumping == false then
     player.body:applyLinearImpulse(0, -2500) --takes x and y values
@@ -72,4 +83,8 @@ end
 
 function endContact(a, b, coll)
   player.isJumping = true
+end
+
+function distanceBetween(x1, y1, x2, y2)
+  return math.sqrt((y2 - y1)^2 + (x2 - x1)^2)
 end
