@@ -1,3 +1,13 @@
+--Completed as far as course goes however I have additions to make
+--To do:
+--add zombie variants
+--make screen space bigger
+--power-ups
+--hp or lives system
+--Fine tune spawning mechanic
+--alternate weapons
+--"local leader boards"
+
 function love.load()
 sprites = {}
 sprites.player = love.graphics.newImage('CourseAssets/player.png')
@@ -7,13 +17,13 @@ sprites.zombie = love.graphics.newImage('courseAssets/Zombie.png')
 
 player = {}
 player.x = love.graphics.getWidth()/2
-player.y = love.graphics.getHeight()/2
+player.y = love.graphics.getHeight()/2 --starts the player in the center of the screen
 player.moveSpeed = 180
 
 zombies = {}
 bullets = {}
 
-gameState = 1
+gameState = 1 --
 
 
 score = 0
@@ -32,19 +42,19 @@ function love.update(dt)
 
   if gameState == 2 then
     --upward movement
-    if love.keyboard.isDown("w") then
+    if love.keyboard.isDown("w") and player.y > 0 then
     player.y = player.y - player.moveSpeed * dt
     end
     --downward movement
-    if love.keyboard.isDown("s") then
+    if love.keyboard.isDown("s") and player.y < love.graphics.getHeight() then
     player.y = player.y + player.moveSpeed * dt
       end
       --left movement
-      if love.keyboard.isDown("a") then
+      if love.keyboard.isDown("a") and player.x > 0 then
       player.x = player.x - player.moveSpeed * dt
     end
     --Right movement
-    if love.keyboard.isDown("d") then
+    if love.keyboard.isDown("d") and player.x < love.graphics.getWidth() then
     player.x = player.x + player.moveSpeed * dt
     end
 
@@ -57,10 +67,19 @@ function love.update(dt)
     z.y = z.y + math.sin(zombie_face_player(z)) * z.speed * dt
 
 
---odd problem, the player position returns nil if the player hasn't moved. Odd
+--odd problem, the player position returns nil if the player hasn't moved. Odd --REsolved! Issue was with an excess end statement at the bottom of the code.
+--additional issue, the zombies seem to despawn at random almost, collision either isn't involved or the detection is wrong.
+--Resolved! THe distance between calculation had a typo in it! It was doin ^ of co-ordinate sets instead of +ing them
+
     if distanceBetween(z.x, z.y, player.x, player.y) < 10 then
       for i, z in ipairs(zombies) do
         zombies[i] = nil --zombies[i] refers to the current index in the zombies table
+        score = 0
+        if score > highScore then
+          highScore = Score
+        end
+        timer = 2
+        gameTimer = 0
         gameState = 1
       end
     end
@@ -83,7 +102,7 @@ end
 --bullet collision with zombies. Despawn particular zombie on hit
 for i, z in ipairs(zombies) do
   for j, b in ipairs(bullets) do
-    if distanceBetween(z.x, z.y, b.x, b.y) < 40 then
+    if distanceBetween(z.x, z.y, b.x, b.y) < 5 then
       z.dead = true
       b.dead = true
       score = score + 1
@@ -207,7 +226,7 @@ function spawnBullet()
     bullet = {}
     bullet.x = player.x
     bullet.y = player.y
-    bullet.speed = 140
+    bullet.speed = 180
     bullet.direction = player_face_mouse() --call teh player_face_mouse function to give the bullet it's directional radian value!
     bullet.dead = false
     table.insert(bullets, bullet)
@@ -236,5 +255,5 @@ end
 
 
 function distanceBetween(x1, y1, x2, y2)
-  return math.sqrt((y2 - y1)^2 ^ (x2 - x1) ^2)
+  return math.sqrt((y2 - y1)^2 + (x2 - x1)^2)
 end
