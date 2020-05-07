@@ -1,7 +1,7 @@
 --to do:
 --Add sound for jump, coin collection, bg music, lava touching hiss
 --implement lives function
---implement game timer because it's good practice 
+--implement game timer because it's good practice
 
 
 function love.load()
@@ -16,17 +16,33 @@ function love.load()
 
   require('player') --requirements just need the file name not the extension.
   require('coin')
+  require('show')
   cameraFile = require('hump-master/camera')
   anim8 = require('anim8-master/anim8')
   sti = require("Simple-Tiled-Implementation-master/sti")
 
-cam = cameraFile()
+  cam = cameraFile()
 
   platforms = {}
-
+  
   score = 0
   highScore = 0
   lives = 3
+
+  gameState = 1
+  timer = 0
+
+  saveData = {}
+  saveData.bestTime = 999
+
+
+  if love.filesystem.getInfo("data.lua") then
+      local data = love.filesystem.load("data.lua")
+      data()
+  end
+
+
+
 --spawn coins using the attributes defined in coin.lua and the positions from the
 --tile map
   gameMap = sti("maps/gameMap.lua")
@@ -38,7 +54,6 @@ cam = cameraFile()
     for i, obj in pairs(gameMap.layers["platformLayer"].objects) do
       spawnPlatform(obj.x, obj.y, obj.width, obj.height)
     end
-
 end
 
 function love.update(dt)
@@ -46,6 +61,28 @@ function love.update(dt)
   playerUpdate(dt)
   gameMap:update(dt)
   coinUpdate(dt)
+
+  if gameState == 2 then
+    timer = timer + dt
+  end
+
+  if #coins == 0 and gameState == 2 then
+    gameState = 1
+    player.body:setPosition(150, 100)
+  end
+
+if #coins == 0 then
+  gameMap = sti("maps/gameMap.lua")
+  for i, obj in pairs(gameMap.layers["coinsLayer"].objects) do
+    spawnCoin(obj.x, obj.y)
+  end
+end
+
+if timer < saveData.bestTime then
+  saveData.bestTime = math.ceil(timer)
+  love.filesystem.write("data.lua", table.show(saveData, "saveData")) --this is where the table.show comes in.
+  --the serialization takes 2 variables. The table we want serialized, then the name of the table this data will go to when it's loaded
+end
 
   cam:lookAt(player.body:getX(), player.body:getY())
 
@@ -69,14 +106,24 @@ function love.draw()
 --basic UI Elements for tracking player stats
     love.graphics.setFont(love.graphics.newFont(25))
     love.graphics.printf("Coins Collected: " .. score, 0, 0, love.graphics.getWidth(), "center")
+    love.graphics.printf("Time: " .. math.ceil(timer), 0, 0, love.graphics.getWidth(), "right")
 
+  if gameState == 1 then
+    love.graphics.setFont(love.graphics.newFont(50))
+    love.graphics.printf("Press any key to begin!" ,0, love.graphics.getHeight()/2, love.graphics.getWidth(), "center")
+  end
 end
 
 function love.keypressed(key, scancode, isrepeat)
-  if key == "space" and player.isJumping == false then
-    player.body:applyLinearImpulse(0, -3200) --takes x and y values
+  if key == "space" and player.isJumping == false and gameState == 2 then
+    player.body:applyLinearImpulse(0, -3600) --takes x and y values
     player.isJumping = true
+  end
 
+  if gameState == 1 then
+    gameState = 2
+    score = 0
+    timer = 0
   end
 end
 

@@ -10,20 +10,22 @@ player.sprite = sprites.player_stand
 player.body:setFixedRotation(true)
 
 function playerUpdate(dt)
-  --movement left and right
-  if love.keyboard.isDown("a") then
-    player.body:setX(player.body:getX()-player.speed * dt)--moves the character ot the left
-    player.direction = -1
-  end
+    if gameState == 2 then
+    --movement left and right
+      if love.keyboard.isDown("a") then
+        player.body:setX(player.body:getX()-player.speed * dt)--moves the character ot the left
+        player.direction = -1
+      end
 
-  if love.keyboard.isDown("d") then
-    player.body:setX(player.body:getX()+player.speed * dt)
-    player.direction = 1
-  end
+      if love.keyboard.isDown("d") then
+        player.body:setX(player.body:getX()+player.speed * dt)
+        player.direction = 1
+      end
 
-  if player.isJumping == true then
-    player.sprite = sprites.player_jump
-  else
-      player.sprite = sprites.player_stand
-  end
+      if player.isJumping == true then
+        player.sprite = sprites.player_jump
+      else
+          player.sprite = sprites.player_stand
+      end
+    end
 end
