@@ -1,4 +1,7 @@
 function love.load()
+
+  gameWorld = love.physics.newWorld(0, 100) 
+
   sprites = {}
   sprites.coinSheet = love.graphics.newImage("sprites/coin_sheet.png")
   sprites.player_jump = love.graphics.newImage("sprites/player_jump.png")
