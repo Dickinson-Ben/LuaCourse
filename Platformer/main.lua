@@ -1,6 +1,6 @@
 function love.load()
-
-  gameWorld = love.physics.newWorld(0, 500)
+love.window.setMode(900, 700)
+  gameWorld = love.physics.newWorld(0, 500, false ) -- the sleep property (last one) means an object that stops moving no longer has physics applied to it
   gameWorld:setCallbacks(beingContact, endContact, preSolve, postSolve)
   sprites = {}
   sprites.coinSheet = love.graphics.newImage("sprites/coin_sheet.png")
@@ -9,21 +9,33 @@ function love.load()
   sprites.tiles = love.graphics.newImage("maps/tiles_spritesheet.png")
 
   require('player') --requirements just need the file name not the extension.
+  require('coin')
+  anim8 = require('anim8-master/anim8')
+
 
 platforms = {}
 spawnPlatform(100, 400, 500, 40)
+spawnCoin(200, 100)
 
 end
 
 function love.update(dt)
   gameWorld:update(dt) --needed to update the world physics interactions. Without it, nothing will move as it should under the effects of physics
   playerUpdate(dt)
+
+  for i, c in ipairs(coins) do
+    c.animation:update(dt)
+  end
 end
 
 function love.draw()
   love.graphics.draw(player.sprite, player.body:getX(), player.body:getY(), nil ,  player.direction, 1 , sprites.player_stand:getWidth()/2, sprites.player_stand:getHeight()/2)
 --utilising player.direction within the scaling factor is a trick to change the directional facing of the sprite. Since a necative
 --horozontal scaling results in the image being scaled to the point of rotation!
+for i, c in ipairs(coins) do
+  c.animation:draw(sprites.coinSheet, c.x, c.y)
+end
+
 
   for i, p in ipairs(platforms) do
     love.graphics.rectangle("fill", p.body:getX(), p.body:getY() , p.width, p.height)

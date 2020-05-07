@@ -7,6 +7,8 @@ player.speed = 200
 player.direction = 1
 player.isJumping = true
 player.sprite = sprites.player_stand
+player.body:setFixedRotation(true)
+
 function playerUpdate(dt)
   --movement left and right
   if love.keyboard.isDown("a") then
