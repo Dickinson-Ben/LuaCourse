@@ -24,7 +24,7 @@ function love.load()
   cam = cameraFile()
 
   platforms = {}
-  
+
   score = 0
   highScore = 0
   lives = 3
