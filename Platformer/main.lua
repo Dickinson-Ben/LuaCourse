@@ -6,6 +6,8 @@
 
 function love.load()
   love.window.setMode(900, 700)
+  love.graphics.setBackgroundColor(1, 0.5, 1, 100)
+
   gameWorld = love.physics.newWorld(0, 500, false ) -- the sleep property (last one) means an object that stops moving no longer has physics applied to it
   gameWorld:setCallbacks(beingContact, endContact, preSolve, postSolve)
   sprites = {}
